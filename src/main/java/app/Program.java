@@ -6,11 +6,12 @@ import java.util.Scanner;
 import java.sql.*;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.jetbrains.annotations.*;
 public class Program {
     public static void console() throws SQLException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
         String in = "";
-        System.out.println("Have you got account? (yes/no)");
+        System.out.println("Hello! Have you got account? (yes/no)");
         in = sc.nextLine();
         Connection con = connectToDb();
         Statement st = con.createStatement();
@@ -67,7 +68,7 @@ public class Program {
         return conn;
     }
 
-    public static int checkLogin(Statement st, String log, String pass) throws SQLException {
+    public static int checkLogin(@NotNull Statement st, String log, String pass) throws SQLException {
         ArrayList<String> l = new ArrayList<String>();
         ArrayList<String> p = new ArrayList<String>();
         ResultSet rs = st.executeQuery("SELECT name FROM users");
@@ -83,7 +84,7 @@ public class Program {
         return 1;
     }
 
-    public static void main(String[] args)
+    public static void main(String @NotNull [] args)
     {
         try {
             if (args[0].equals("console")) {
@@ -98,20 +99,30 @@ public class Program {
     }
 
     public static void startConsoleGame(String log, Statement st) throws SQLException {
-        System.out.println("Hi, "+log+"!");
-        System.out.println("Welcome to the game!");
-        System.out.println("List of your characters: ");
-        ArrayList<String> chars = getCharsName(log,st);
-        for (String s : chars)
-            System.out.println("Character name: "+s);
-        System.out.println("Choose exist character or create new. (create/name of char)");
-        Scanner sc = new Scanner(System.in);
-        String in = sc.nextLine();
-        if (in.equals("create"))
-            createChar(log,st,sc);
+        while (true)
+        {
+            System.out.println("Hi, "+log+"!");
+            System.out.println("Welcome to the game!");
+            System.out.println("List of your characters: ");
+            ArrayList<String> chars = getCharsName(log,st);
+            for (String s : chars)
+                System.out.println("Character name: "+s);
+            System.out.println("Choose exist character or create new. (create/name of char/delete)");
+            System.out.println("For quit write EXIT");
+            Scanner sc = new Scanner(System.in);
+            String in = sc.nextLine();
+            if (in.equals("create"))
+                createChar(log,st,sc);
+            if (in.equals("delete"))
+                deleteChar(log,chars,sc,st);
+            if (in.equals("EXIT"))
+                break;
+            if (chars.contains(in))
+                launchGame(in,st,sc);
+        }
     }
 
-    public static ArrayList<String> getCharsName(String log, Statement st) throws SQLException {
+    public static @NotNull ArrayList<String> getCharsName(String log, @NotNull Statement st) throws SQLException {
         String ids = ""; ArrayList<String> lst = new ArrayList<String>();
         ArrayList<String> res = new ArrayList<String>();
         ResultSet rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");
@@ -161,7 +172,7 @@ public class Program {
         }
     }
 
-    public static String checkCharName(Statement st, Scanner sc) throws SQLException {
+    public static String checkCharName(@NotNull Statement st, @NotNull Scanner sc) throws SQLException {
         String s = sc.nextLine();
         ResultSet rs = st.executeQuery("SELECT name FROM characters WHERE name = '"+s+"'");
         String check = "";
@@ -175,7 +186,7 @@ public class Program {
         return s;
     }
 
-    public static String checkCharClass(Scanner sc)
+    public static @NotNull String checkCharClass(@NotNull Scanner sc)
     {
         String s = sc.nextLine();
         if (!s.equals("mage") && !s.equals("warrior")) {
@@ -183,5 +194,46 @@ public class Program {
             s = checkCharClass(sc);
         }
         return s;
+    }
+
+    public static void deleteChar(String log, @NotNull ArrayList<String> lst, @NotNull Scanner sc, Statement st)
+            throws SQLException {
+        System.out.print("Write nik name of character for delete: ");
+        String nik = sc.nextLine();
+        if (!lst.contains(nik))
+            System.out.println("You haven`t character with this name!");
+        else
+        {
+            st.executeUpdate("DELETE FROM characters WHERE name = '"+nik+"'");
+            System.out.println("Character " + nik +" success deleted.");
+        }
+    }
+
+    public static void launchGame(String nik,Statement st,Scanner sc) throws SQLException
+    {
+
+    }
+
+    public static void printMap(int x,int y, int lvl)
+    {
+        int size = (lvl-1)*5+10;
+        for (int i = 0;i<size/2;i++)
+        {
+            for (int j = 0;j<size;j++)
+            {
+                if (i == 0 || i == size/2 -1)
+                    System.out.print("_");
+                else
+                {
+                    if (j == 0 || j == size -1)
+                        System.out.print("|");
+                    else if (i == y && j == x)
+                        System.out.print("&");
+                    else
+                        System.out.print(" ");
+                }
+            }
+            System.out.println();
+        }
     }
 }
