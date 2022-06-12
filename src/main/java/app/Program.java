@@ -48,7 +48,9 @@ public class Program {
                 System.out.println("Account with this name exist! Try again");
             else
             {
-                st.executeUpdate("INSERT INTO users(name,password,charsID) VALUES ('"
+                int Id = getLastId(st) + 1;
+                System.out.println(Id);
+                st.executeUpdate("INSERT INTO users(id,name,password,charsID) VALUES ("+Id+",'"
                         +login+"','"+pass+"',"+"''"+");");
                 System.out.println("Account created! Start game");
                 startConsoleGame(login, st);
@@ -57,12 +59,18 @@ public class Program {
             }
         }
     }
-
+    public static int getLastId(Statement st) throws SQLException
+    {
+        int id = 0;
+        ResultSet rs = st.executeQuery("SELECT id FROM users");
+        while(rs.next()) { id = rs.getInt(1);}
+        return id;
+    }
     public static Connection connectToDb() throws SQLException, ClassNotFoundException {
         Connection conn = null;
         HikariConfig cfg = new HikariConfig();
-        cfg.setJdbcUrl("jdbc:postgresql://localhost:5432/uterese");
-        cfg.setUsername("uterese");
+        cfg.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
+        cfg.setUsername("postgres");cfg.setPassword("123");
         HikariDataSource ds = new HikariDataSource(cfg);
         conn = ds.getConnection();
         return conn;
@@ -157,11 +165,12 @@ public class Program {
             String name = checkCharName(st,sc);
             System.out.print("Choose character class (mage or warrior): ");
             String cls = checkCharClass(sc);
-            ArrayList<Integer> ids = new ArrayList<Integer>();
+            ArrayList<Integer> ids = new ArrayList<Integer>();int id = 0;
             ResultSet rs = st.executeQuery("SELECT id FROM characters");
             while (rs.next())
                 ids.add(rs.getInt("id"));
-            int id = ids.get(ids.size()-1) + 1;
+            if (ids.size() > 0)
+                id = ids.get(ids.size()-1) + 1;
             st.executeUpdate("INSERT INTO characters(id,name,class,lvl,exp,attack,defense,hp,equip,inventory,position) " +
                     "VALUES("+id+",'"+name+"','"+cls+"',"+1+","+1000+","+5+","+3+","+100+",'','','');");
             rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");String i = "";
