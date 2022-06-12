@@ -213,6 +213,24 @@ public class Program {
             System.out.println("You haven`t character with this name!");
         else
         {
+            int id = 0;
+            ResultSet rs = st.executeQuery("SELECT id FROM characters WHERE name = '"+nik+"'");
+            while (rs.next())
+                id = rs.getInt("id");
+            String ids = "";
+            rs = st.executeQuery("SELECT * FROM users WHERE name = '"+log+"'");
+            while (rs.next())
+                ids = rs.getString("charsid");
+            char c = Character.forDigit(id,10);
+            char []buff = ids.toCharArray();StringBuilder builder = new StringBuilder();
+            for (int i = 0;i<buff.length;i++)
+            {
+                if (buff[i] != c)
+                    builder.append(buff[i]);
+                else
+                    i++;
+            }
+            st.executeUpdate("UPDATE users SET charsid = '"+builder.toString()+"' WHERE name = '"+log+"'");
             st.executeUpdate("DELETE FROM characters WHERE name = '"+nik+"'");
             System.out.println("Character " + nik +" success deleted.");
         }
