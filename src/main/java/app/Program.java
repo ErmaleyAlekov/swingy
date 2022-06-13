@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.sql.*;
+
+import classes.User;
+import classes.Utils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.*;
 public class Program {
+    static User u = null;
     public static void console() throws SQLException, ClassNotFoundException {
         Scanner sc = new Scanner(System.in);
         String in = "";
@@ -21,6 +25,7 @@ public class Program {
             System.out.print("PASS: ");
             String pass = sc.nextLine();
             if (checkLogin(st, login, pass) == 0) {
+                u = new User(login,pass);
                 System.out.println("You are login in!");
                 startConsoleGame(login, st);
             }
@@ -111,10 +116,12 @@ public class Program {
         {
             System.out.println("Hi, "+log+"!");
             System.out.println("Welcome to the game!");
-            System.out.println("List of your characters: ");
+            System.out.print("List of your characters: ");
             ArrayList<String> chars = getCharsName(log,st);
+            u.getChars(chars,st);
             for (String s : chars)
-                System.out.println("Character name: "+s);
+                System.out.print(s+"("+u.getCharLvl(s)+" lvl)"+",");
+            System.out.println();
             System.out.println("Choose exist character or create new. (create/name of char/delete)");
             System.out.println("For quit write EXIT");
             Scanner sc = new Scanner(System.in);
@@ -136,19 +143,7 @@ public class Program {
         ResultSet rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");
         while (rs.next())
             ids = rs.getString("charsid");
-        char []buff = ids.toCharArray();
-        StringBuilder b = new StringBuilder();
-        for (char a :buff)
-        {
-            if (a == ',')
-            {
-                lst.add(b.toString());
-                b = new StringBuilder();
-            }
-            else
-                b.append(a);
-        }
-        lst.add(b.toString());lst.remove(lst.size()-1);
+        lst = Utils.Split(ids,',');
         for (int i = 0;i < lst.size();i++)
         {
             rs = st.executeQuery("SELECT name FROM characters WHERE id = "+lst.get(i));
@@ -221,16 +216,9 @@ public class Program {
             rs = st.executeQuery("SELECT * FROM users WHERE name = '"+log+"'");
             while (rs.next())
                 ids = rs.getString("charsid");
-            char c = Character.forDigit(id,10);
-            char []buff = ids.toCharArray();StringBuilder builder = new StringBuilder();
-            for (int i = 0;i<buff.length;i++)
-            {
-                if (buff[i] != c)
-                    builder.append(buff[i]);
-                else
-                    i++;
-            }
-            st.executeUpdate("UPDATE users SET charsid = '"+builder.toString()+"' WHERE name = '"+log+"'");
+            String s = id +"";
+            String str = Utils.eraseSubString(ids, s);
+            st.executeUpdate("UPDATE users SET charsid = '"+str+"' WHERE name = '"+log+"'");
             st.executeUpdate("DELETE FROM characters WHERE name = '"+nik+"'");
             System.out.println("Character " + nik +" success deleted.");
         }

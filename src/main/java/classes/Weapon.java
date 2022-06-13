@@ -9,4 +9,5 @@ public class Weapon implements Item
     public static int getDamage() {return damage;}
     public static void setName(String n) {name = n;}
     public static void setDamage(int d) {damage = d;}
+
 }
