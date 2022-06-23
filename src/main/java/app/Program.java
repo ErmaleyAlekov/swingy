@@ -1,10 +1,11 @@
 package app;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.sql.*;
-
+import classes.Character;
+import classes.Position;
 import classes.User;
 import classes.Utils;
 import com.zaxxer.hikari.HikariConfig;
@@ -12,7 +13,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.*;
 public class Program {
     static User u = null;
-    public static void console() throws SQLException, ClassNotFoundException {
+    public static void console() throws SQLException, ClassNotFoundException, IOException {
         Scanner sc = new Scanner(System.in);
         String in = "";
         System.out.println("Hello! Have you got account? (yes/no)");
@@ -34,14 +35,14 @@ public class Program {
         } else if (in.equals("no"))
             createAccount(st);
         else
-            throw new InputMismatchException();
+            console();
         sc.close();
     }
 
     public static void gui() {
     }
 
-    public static void createAccount(Statement st) throws SQLException {
+    public static void createAccount(Statement st) throws SQLException, IOException {
         while (true)
         {
             System.out.print("Create login: ");
@@ -64,7 +65,7 @@ public class Program {
             }
         }
     }
-    public static int getLastId(Statement st) throws SQLException
+    public static int getLastId(@NotNull Statement st) throws SQLException
     {
         int id = 0;
         ResultSet rs = st.executeQuery("SELECT id FROM users");
@@ -97,7 +98,7 @@ public class Program {
         return 1;
     }
 
-    public static void main(String @NotNull [] args)
+    public static void main(String []args)
     {
         try {
             if (args[0].equals("console")) {
@@ -106,12 +107,12 @@ public class Program {
                 gui();
             } else
                 throw new IllegalArgumentException();
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException | ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void startConsoleGame(String log, Statement st) throws SQLException {
+    public static void startConsoleGame(String log, Statement st) throws SQLException, IOException {
         while (true)
         {
             System.out.println("Hi, "+log+"!");
@@ -132,8 +133,14 @@ public class Program {
                 deleteChar(log,chars,sc,st);
             if (in.equals("EXIT"))
                 break;
-            if (chars.contains(in))
-                launchGame(in,st,sc);
+            if (chars.contains(in)) {
+                for (Character ch : u.getChars()) {
+                    if (ch.getName().equals(in)) {
+                        launchGame(ch, st, sc);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -154,8 +161,7 @@ public class Program {
     }
 
     public static void createChar(String log, Statement st, Scanner sc) throws SQLException {
-        while (true)
-        {
+
             System.out.print("Write character name: ");
             String name = checkCharName(st,sc);
             System.out.print("Choose character class (mage or warrior): ");
@@ -166,14 +172,12 @@ public class Program {
                 ids.add(rs.getInt("id"));
             if (ids.size() > 0)
                 id = ids.get(ids.size()-1) + 1;
-            st.executeUpdate("INSERT INTO characters(id,name,class,lvl,exp,attack,defense,hp,equip,inventory,position) " +
+            st.executeUpdate("INSERT INTO characters(id,name,class,lvl,exp,attack,defense,hp,equip,inventory) " +
                     "VALUES("+id+",'"+name+"','"+cls+"',"+1+","+1000+","+5+","+3+","+100+",'','','');");
             rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");String i = "";
             while (rs.next())
                 i = rs.getString("charsid");
             st.executeUpdate("UPDATE users SET charsid = '"+i+id+",' WHERE name = '"+log+"'");
-            break;
-        }
     }
 
     public static String checkCharName(@NotNull Statement st, @NotNull Scanner sc) throws SQLException {
@@ -224,28 +228,132 @@ public class Program {
         }
     }
 
-    public static void launchGame(String nik,Statement st,Scanner sc) throws SQLException
+    public static void launchGame(@NotNull Character ch, Statement st, @NotNull Scanner sc)
+            throws SQLException, IOException {
+        int size = (ch.getLvl()-1)*5+10;char in = 0;
+        ArrayList<Position> lst = getPositions(ch,size);
+        lst.get(1).printPosition();
+        while (true)
+        {
+            if (lst.get(0).getX() <= 0 || lst.get(0).getX() >= size -1
+                    || lst.get(0).getY() <= 0 || lst.get(0).getY() >= size /2 -1)
+            {
+                System.out.println("You are lose!");
+                break;
+            }
+            System.out.println("w - up, s - down, d - right, a - left, e - hit, q - exit");
+            System.out.println("Your heals points: " + ch.getHp());
+            printMap(lst,ch.getLvl());
+            in = sc.next().charAt(0);
+            if (in == 'w')
+                lst.get(0).setY(lst.get(0).getY() -1);
+            if (in == 's')
+                lst.get(0).setY(lst.get(0).getY() +1);
+            if (in == 'd')
+                lst.get(0).setX(lst.get(0).getX() +1);
+            if (in == 'a')
+                lst.get(0).setX(lst.get(0).getX() -1);
+            if (in == 'q') {
+                break;
+            }
+            lst = enemyMove(lst);
+        }
+    }
+    public static ArrayList<Position> getPositions(@NotNull Character ch, int size)
     {
-
+        ArrayList<Position> lst = new ArrayList<>();
+        for (int i = 0;i<=ch.getLvl();i++)
+        {
+            Position p = new Position();
+            if (i == 0)
+            {
+                p.setX(size/2);p.setY(size / 4);
+                lst.add(p);
+            }
+            else
+            {
+                p.setX(1 + (int)(Math.random() * (size -2)));
+                p.setY(1 + (int)(Math.random() * (size / 2 - 2)));
+                lst.add(p);
+            }
+        }
+        return lst;
     }
 
-    public static void printMap(int x,int y, int lvl)
+    public static ArrayList<Position> enemyMove(ArrayList<Position> lst)
+    {
+        int x = lst.get(0).getX();int y = lst.get(0).getY();
+        for (int i = 1;i< lst.size();i++)
+        {
+            if (Utils.moreOn(x,lst.get(i).getX(),2)
+                    && Utils.moreOn(y,lst.get(i).getY(),2))
+            {
+                int rx = Math.max(x,lst.get(i).getX())-Math.min(x,lst.get(i).getX());
+                int ry = Math.max(y,lst.get(i).getY())-Math.min(y,lst.get(i).getY());
+                if (rx > ry)
+                {
+                    if (y > lst.get(i).getY())
+                        lst.get(i).setY(lst.get(i).getY() +1);
+                    else if (y < lst.get(i).getY())
+                        lst.get(i).setY(lst.get(i).getY() -1);
+                } else if (ry > rx) {
+                    if (x > lst.get(i).getX())
+                        lst.get(i).setX(lst.get(i).getX() +1);
+                    else if (x < lst.get(i).getX())
+                        lst.get(i).setX(lst.get(i).getX() -1);
+                }
+            }
+            if (Utils.moreOn(x,lst.get(i).getX(),2)
+                    && !Utils.moreOn(y,lst.get(i).getY(),2))
+            {
+                if (x > lst.get(i).getX())
+                    lst.get(i).setX(lst.get(i).getX() +1);
+                else if (x < lst.get(i).getX())
+                    lst.get(i).setX(lst.get(i).getX() -1);
+            }
+            if (Utils.moreOn(y,lst.get(i).getY(),2)
+                    && !Utils.moreOn(x,lst.get(i).getX(),2))
+            {
+                if (y > lst.get(i).getY())
+                    lst.get(i).setY(lst.get(i).getY() +1);
+                else if (y < lst.get(i).getY())
+                    lst.get(i).setY(lst.get(i).getY() -1);
+            }
+        }
+        return lst;
+    }
+
+    public static void printMap(ArrayList<Position> lst, int lvl)
     {
         int size = (lvl-1)*5+10;
         for (int i = 0;i<size/2;i++)
         {
             for (int j = 0;j<size;j++)
             {
+                int flag =0;
                 if (i == 0 || i == size/2 -1)
                     System.out.print("_");
                 else
                 {
+                    Position p = new Position();
+                    p.setX(j);p.setY(i);
+
                     if (j == 0 || j == size -1)
                         System.out.print("|");
-                    else if (i == y && j == x)
+                    else if (p.contains(lst.get(0)))
                         System.out.print("&");
                     else
-                        System.out.print(" ");
+                    {
+                        for (int g = 1;g< lst.size();g++) {
+                            if (p.contains(lst.get(g))) {
+                                System.out.print("x");
+                                flag = 1;
+                            }
+                        }
+                        if (flag == 0)
+                            System.out.print(" ");
+                    }
+
                 }
             }
             System.out.println();

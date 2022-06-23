@@ -40,4 +40,14 @@ public class Utils {
         }
         return b.toString();
     }
+    public static boolean moreOn(int a, int b, int on)
+    {
+        if (a > b)
+            return (a-b) >= on;
+        else if (a < b) {
+            return (b - a) >= on;
+        }
+        else
+            return false;
+    }
 }

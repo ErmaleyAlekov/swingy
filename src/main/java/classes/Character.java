@@ -4,35 +4,35 @@ import java.util.ArrayList;
 
 public class Character
 {
-    private static String name;
-    private static String Class;
-    private static int lvl = 1;
-    private static int exp = 1000;
-    private static int hp = 100;
-    private static int attack = 5;
-    private static int def = 3;
-    private static Equip equip;
-    public static ArrayList<Item> inventory = new ArrayList<Item>();
+    private String name;
+    private String Class;
+    private int lvl = 1;
+    private int exp = 1000;
+    private int hp = 100;
+    private int attack = 5;
+    private int def = 3;
+    private Equip equip;
+    public ArrayList<Item> inventory = new ArrayList<Item>();
     public Character(String Name, String cls) {name = Name; Class = cls;}
-    public static String getName() {return name;}
-    public static String getCls() {return Class;}
-    public static int getLvl() {return lvl;}
-    public static int getExp()  {return exp;}
-    public static int getHp() {return hp;}
-    public static int getAttack() {return attack;}
-    public static int getDef() {return def;}
-    public static Equip getEquip() {return equip;}
-    public static void setName(String Name) {name = Name;}
-    public static void setCls(String Cls) {Class = Cls;}
-    public static void setLvl(int l) {lvl = l;}
-    public static void setExp(int Exp) {exp = Exp;}
-    public static void setHp(int Hp) {hp = Hp;}
-    public static void setAttack(int a) {attack = a;}
-    public static void setDef(int d) {def = d;}
-    public static void setEquip(Equip o) {equip = o;}
-    public static void lvlUp() {lvl++;hp+= 100;attack+=3;def+=1;}
-    public static void addExp(int Exp) {exp += Exp;checkExp();}
-    public static void equipItem(Item item)
+    public String getName() {return name;}
+    public String getCls() {return Class;}
+    public int getLvl() {return lvl;}
+    public int getExp()  {return exp;}
+    public int getHp() {return hp;}
+    public int getAttack() {return attack;}
+    public int getDef() {return def;}
+    public Equip getEquip() {return equip;}
+    public void setName(String Name) {name = Name;}
+    public void setCls(String Cls) {Class = Cls;}
+    public void setLvl(int l) {lvl = l;}
+    public void setExp(int Exp) {exp = Exp;}
+    public void setHp(int Hp) {hp = Hp;}
+    public void setAttack(int a) {attack = a;}
+    public void setDef(int d) {def = d;}
+    public void setEquip(Equip o) {equip = o;}
+    public void lvlUp() {lvl++;hp+= 100;attack+=3;def+=1;}
+    public void addExp(int Exp) {exp += Exp;checkExp();}
+    public void equipItem(Item item)
     {
         if (item instanceof Weapon) {
             if (equip.getWeapon() != null)
@@ -65,7 +65,7 @@ public class Character
             def += equip.getBoot().getDef();
         }
     }
-    public static void checkExp()
+    public void checkExp()
     {
         int e = (lvl+1)*1000+(int)Math.pow(lvl,2)*450;
         if (exp > e)

@@ -11,24 +11,24 @@ import java.util.ArrayList;
 
 public class Equip
 {
-    private static Weapon weapon;
-    private static Armor armor;
-    private static Helmet helmet;
-    private static Glove glove;
-    private static Boot boot;
+    private Weapon weapon;
+    private Armor armor;
+    private Helmet helmet;
+    private Glove glove;
+    private Boot boot;
     public Equip() {}
     public Equip(Weapon w, Armor a, Helmet h, Glove g, Boot b) {weapon = w;armor = a;helmet = h;glove = g;boot = b;}
-    public static Weapon getWeapon() {return weapon;}
-    public static Armor getArmor() {return armor;}
-    public static Helmet getHelmet() {return  helmet;}
-    public static Glove getGlove() {return glove;}
-    public static Boot getBoot() {return boot;}
-    public static void setWeapon(Weapon w) {weapon = w;}
-    public static void setArmor(Armor a) {armor = a;}
-    public static void setHelmet(Helmet h) {helmet = h;}
-    public static void setGlove(Glove g) {glove = g;}
-    public static void setBoot(Boot b) {boot = b;}
-    public static@NotNull Equip getInstance(@NotNull ArrayList<String> lst, Statement st) throws SQLException
+    public Weapon getWeapon() {return weapon;}
+    public Armor getArmor() {return armor;}
+    public Helmet getHelmet() {return  helmet;}
+    public Glove getGlove() {return glove;}
+    public Boot getBoot() {return boot;}
+    public void setWeapon(Weapon w) {weapon = w;}
+    public void setArmor(Armor a) {armor = a;}
+    public void setHelmet(Helmet h) {helmet = h;}
+    public void setGlove(Glove g) {glove = g;}
+    public void setBoot(Boot b) {boot = b;}
+    public @NotNull Equip getInstance(@NotNull ArrayList<String> lst, Statement st) throws SQLException
     {
         ArrayList<Item> lst2 = getItems(lst,st);Equip obj = new Equip();
         for (Item i:lst2)
@@ -47,7 +47,7 @@ public class Equip
         return obj;
     }
 
-    public static @NotNull ArrayList<Item> getItems(@NotNull ArrayList<String> lst, Statement st) throws SQLException
+    public @NotNull ArrayList<Item> getItems(@NotNull ArrayList<String> lst, Statement st) throws SQLException
     {
         ArrayList<Item> lst2 = new ArrayList<>();
         for (String s : lst)
@@ -65,7 +65,7 @@ public class Equip
         }
         return lst2;
     }
-    public static @Nullable Item getItem(String name, @NotNull String type, int attack, int def)
+    public @Nullable Item getItem(String name, @NotNull String type, int attack, int def)
     {
         if (type.equals("weapon"))
             return new Weapon(name,attack);
