@@ -21,17 +21,21 @@ public class Program {
         Connection con = connectToDb();
         Statement st = con.createStatement();
         if (in.equals("yes")) {
-            System.out.print("LOGIN: ");
-            String login = sc.nextLine();
-            System.out.print("PASS: ");
-            String pass = sc.nextLine();
-            if (checkLogin(st, login, pass) == 0) {
-                u = new User(login,pass);
-                System.out.println("You are login in!");
-                startConsoleGame(login, st);
+            while (true)
+            {
+                System.out.print("LOGIN: ");
+                String login = sc.nextLine();
+                System.out.print("PASS: ");
+                String pass = sc.nextLine();
+                if (checkLogin(st, login, pass) == 0) {
+                    u = new User(login,pass);
+                    System.out.println("You are login in!");
+                    startConsoleGame(login, st);
+                    break;
+                }
+                else
+                    System.out.println("Wrong data!");
             }
-            else
-                System.out.println("Wrong data!");
         } else if (in.equals("no"))
             createAccount(st);
         else
@@ -232,7 +236,6 @@ public class Program {
             throws SQLException, IOException {
         int size = (ch.getLvl()-1)*5+10;char in = 0;
         ArrayList<Position> lst = getPositions(ch,size);
-        lst.get(1).printPosition();
         while (true)
         {
             if (lst.get(0).getX() <= 0 || lst.get(0).getX() >= size -1
@@ -259,7 +262,7 @@ public class Program {
             lst = enemyMove(lst);
         }
     }
-    public static ArrayList<Position> getPositions(@NotNull Character ch, int size)
+    public static @NotNull ArrayList<Position> getPositions(@NotNull Character ch, int size)
     {
         ArrayList<Position> lst = new ArrayList<>();
         for (int i = 0;i<=ch.getLvl();i++)
@@ -280,7 +283,7 @@ public class Program {
         return lst;
     }
 
-    public static ArrayList<Position> enemyMove(ArrayList<Position> lst)
+    public static ArrayList<Position> enemyMove(@NotNull ArrayList<Position> lst)
     {
         int x = lst.get(0).getX();int y = lst.get(0).getY();
         for (int i = 1;i< lst.size();i++)
@@ -320,9 +323,23 @@ public class Program {
                     lst.get(i).setY(lst.get(i).getY() -1);
             }
         }
+        lst = checkPositions(lst);
         return lst;
     }
 
+    @Contract("_ -> param1")
+    public static ArrayList<Position> checkPositions(@NotNull ArrayList<Position> lst)
+    {
+        for (int i =0;i< lst.size();i++)
+        {
+            for (int j = 0;j< lst.size();j++)
+            {
+                if (lst.get(i).equals(lst.get(j)) && i != j)
+                    lst.get(j).setX(lst.get(j).getX() + 1);
+            }
+        }
+        return lst;
+    }
     public static void printMap(ArrayList<Position> lst, int lvl)
     {
         int size = (lvl-1)*5+10;
@@ -330,30 +347,20 @@ public class Program {
         {
             for (int j = 0;j<size;j++)
             {
-                int flag =0;
                 if (i == 0 || i == size/2 -1)
                     System.out.print("_");
                 else
                 {
                     Position p = new Position();
                     p.setX(j);p.setY(i);
-
                     if (j == 0 || j == size -1)
                         System.out.print("|");
-                    else if (p.contains(lst.get(0)))
+                    else if (p.equals(lst.get(0)))
                         System.out.print("&");
+                    else if (p.contains(lst))
+                        System.out.print("x");
                     else
-                    {
-                        for (int g = 1;g< lst.size();g++) {
-                            if (p.contains(lst.get(g))) {
-                                System.out.print("x");
-                                flag = 1;
-                            }
-                        }
-                        if (flag == 0)
-                            System.out.print(" ");
-                    }
-
+                        System.out.print(" ");
                 }
             }
             System.out.println();
