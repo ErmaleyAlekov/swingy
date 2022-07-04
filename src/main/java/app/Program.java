@@ -4,16 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.sql.*;
+
+import classes.*;
 import classes.Character;
-import classes.Position;
-import classes.User;
-import classes.Utils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.*;
 public class Program {
     static User u = null;
-    public static void console() throws SQLException, ClassNotFoundException, IOException {
+    public static void console() throws Exception {
         Scanner sc = new Scanner(System.in);
         String in = "";
         System.out.println("Hello! Have you got account? (yes/no)");
@@ -46,7 +45,7 @@ public class Program {
     public static void gui() {
     }
 
-    public static void createAccount(Statement st) throws SQLException, IOException {
+    public static void createAccount(Statement st) throws Exception {
         while (true)
         {
             System.out.print("Create login: ");
@@ -111,12 +110,12 @@ public class Program {
                 gui();
             } else
                 throw new IllegalArgumentException();
-        } catch (SQLException | ClassNotFoundException | IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void startConsoleGame(String log, Statement st) throws SQLException, IOException {
+    public static void startConsoleGame(String log, Statement st) throws Exception {
         while (true)
         {
             System.out.println("Hi, "+log+"!");
@@ -233,9 +232,10 @@ public class Program {
     }
 
     public static void launchGame(@NotNull Character ch, Statement st, @NotNull Scanner sc)
-            throws SQLException, IOException {
+            throws Exception {
         int size = (ch.getLvl()-1)*5+10;char in = 0;
         ArrayList<Position> lst = getPositions(ch,size);
+        ArrayList<Enemy> lst2 = getEnemys(ch);
         while (true)
         {
             if (lst.get(0).getX() <= 0 || lst.get(0).getX() >= size -1
@@ -246,6 +246,8 @@ public class Program {
             }
             System.out.println("w - up, s - down, d - right, a - left, e - hit, q - exit");
             System.out.println("Your heals points: " + ch.getHp());
+            for (Enemy e : lst2)
+                System.out.println("Enemy heals point: " + e.hp);
             printMap(lst,ch.getLvl());
             in = sc.next().charAt(0);
             if (in == 'w')
@@ -254,14 +256,83 @@ public class Program {
                 lst.get(0).setY(lst.get(0).getY() +1);
             if (in == 'd')
                 lst.get(0).setX(lst.get(0).getX() +1);
+            if (in == 'e')
+            {
+                for (int i = 1;i<lst.size();i++)
+                {
+                    if (!Utils.moreOn(lst.get(0).getX(),lst.get(i).getX(),2)
+                    && !Utils.moreOn(lst.get(0).getY(),lst.get(i).getY(),2))
+                        lst2.get(i-1).setEnemy(makeDamage(lst2.get(i-1),ch));
+                }
+                ArrayList<Integer> del = checkEnemysHp(lst2);
+                for (Integer i : del)
+                {
+                    lst2.remove(lst2.get(i));
+                    lst.remove(i + 1);
+                }
+            }
             if (in == 'a')
                 lst.get(0).setX(lst.get(0).getX() -1);
             if (in == 'q') {
                 break;
             }
+            if (lst2.isEmpty())
+            {
+                System.out.println("You are win!");
+                ch.addExp((int)(ch.getExp() * 1.5));
+                ch.updateCharInBase(st);
+                launchGame(ch,st,sc);
+                break;
+            }
+            for (int i = 0;i< lst2.size();i++) {
+                if (!Utils.moreOn(lst.get(0).getX(),lst.get(i + 1).getX(),2)
+                    && !Utils.moreOn(lst.get(0).getY(),lst.get(i + 1).getY(),2))
+                    ch = lst2.get(i).giveDamage(ch);
+            }
+            if (ch.getHp() <= 0)
+            {
+                System.out.println("You are lose!");
+                break;
+            }
             lst = enemyMove(lst);
         }
     }
+
+    public static Enemy makeDamage(Enemy obj, Character ch)
+    {
+        int rand = 1 + (int)(Math.random() * 3);int crit = 1;
+        if (rand == 3)
+            crit = 2;
+        obj.hp = obj.hp - (ch.getAttack()*crit - obj.defense);
+        return obj;
+    }
+
+    public static ArrayList<Integer> checkEnemysHp(ArrayList<Enemy> lst)
+    {
+        ArrayList<Integer> res = new ArrayList<>();
+        for (int i=0;i<lst.size();i++)
+        {
+            if (lst.get(i).hp <= 0)
+                res.add(i);
+        }
+        return res;
+    }
+
+    @Contract(pure = true)
+    public static @NotNull ArrayList<Enemy> getEnemys(@NotNull Character ch)
+    {
+        ArrayList<Enemy> lst = new ArrayList<>();
+        for (int i = 0;i<ch.getLvl();i++)
+        {
+            Enemy e = new Enemy();
+            e.hp = ch.getLvl() * 100;
+            e.attack = ch.getLvl() * 2;
+            e.defense = ch.getLvl();
+            lst.add(e);
+        }
+        return lst;
+    }
+
     public static @NotNull ArrayList<Position> getPositions(@NotNull Character ch, int size)
     {
         ArrayList<Position> lst = new ArrayList<>();

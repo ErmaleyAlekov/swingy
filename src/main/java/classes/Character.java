@@ -1,5 +1,9 @@
 package classes;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class Character
@@ -70,5 +74,10 @@ public class Character
         int e = (lvl+1)*1000+(int)Math.pow(lvl,2)*450;
         if (exp > e)
             lvlUp();
+    }
+    public void updateCharInBase(Statement st) throws Exception
+    {
+        st.executeUpdate("UPDATE characters SET lvl='"+lvl+"', exp = '"+exp+"', hp = '"+hp+"',"
+                + " attack = '"+attack+"', defense = '"+def+"' WHERE name = '"+name+"'");
     }
 }
