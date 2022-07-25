@@ -28,6 +28,22 @@ public class Equip
     public void setHelmet(Helmet h) {helmet = h;}
     public void setGlove(Glove g) {glove = g;}
     public void setBoot(Boot b) {boot = b;}
+    public String getEquipItemsNames()
+    {
+        StringBuilder b = new StringBuilder();
+        b.append("");
+        if (weapon != null)
+            b.append(weapon.getName()).append(",");
+        if (armor != null)
+            b.append(armor.getName()).append(",");
+        if (helmet != null)
+            b.append(helmet.getName()).append(",");
+        if (glove != null)
+            b.append(glove.getName()).append(",");
+        if (boot != null)
+            b.append(boot.getName()).append(",");
+        return b.toString();
+    }
     public @NotNull Equip getInstance(@NotNull ArrayList<String> lst, Statement st) throws SQLException
     {
         ArrayList<Item> lst2 = getItems(lst,st);Equip obj = new Equip();

@@ -17,7 +17,7 @@ public class Enemy {
         int rand = 1 + (int)(Math.random() * 3);int crit = 1;
         if (rand == 3)
             crit = 2;
-        ch.setHp(ch.getHp() - attack * crit);
+        ch.setHp(ch.getHp() - (attack * crit - ch.getDef()));
         return ch;
     }
 }

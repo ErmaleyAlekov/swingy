@@ -1,28 +1,25 @@
+
 import classes.Utils;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class test {
-    public static void main(String[] args) {
-        String str = eraseSubString("11,","11");
-        System.out.println(str);
+    public static void main(String[] args) throws IOException {
+        ArrayList<p> lst = new ArrayList<>();
+        p P = new p();p l = new p();
+        P.x = 1;l.x = 1;
+        P.y = 2;l.y = 2;
+        lst.add(P);
+        if (lst.equals(l))
+            System.out.println("YEs");
+        else
+            System.out.println("No");
     }
-
-    public static @NotNull String eraseSubString(@NotNull String str, @NotNull String str2)
+    public static class p
     {
-        String res = str.replace(str2,"");
-        System.out.println(res);int f =0;
-        char []buff = res.toCharArray();StringBuilder b = new StringBuilder();
-        for (int i = 0;i< buff.length;i++)
-        {
-            if (i != 0 && buff[i] == ',' && buff[i-1] == ',')
-                f = 1;
-            else if (i == 0 && buff[i] == ',')
-                f = 1;
-            else
-                b.append(buff[i]);
-        }
-        return b.toString();
+        public int x;
+        public int y;
     }
 }

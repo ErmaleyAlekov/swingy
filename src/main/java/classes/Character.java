@@ -1,7 +1,10 @@
 package classes;
 
+import app.Program;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -15,7 +18,7 @@ public class Character
     private int hp = 100;
     private int attack = 5;
     private int def = 3;
-    private Equip equip;
+    private Equip equip = new Equip();
     public ArrayList<Item> inventory = new ArrayList<Item>();
     public Character(String Name, String cls) {name = Name; Class = cls;}
     public String getName() {return name;}
@@ -34,8 +37,11 @@ public class Character
     public void setAttack(int a) {attack = a;}
     public void setDef(int d) {def = d;}
     public void setEquip(Equip o) {equip = o;}
-    public void lvlUp() {lvl++;hp+= 100;attack+=3;def+=1;}
-    public void addExp(int Exp) {exp += Exp;checkExp();}
+    public void lvlUp() throws Exception {
+        Connection con = Program.connectToDb();
+        Statement st = con.createStatement();lvl++;hp = getHpFromDb(st);
+        hp+= 100;attack+=3;def+=1;con.close();}
+    public void addExp(int Exp) throws Exception {exp += Exp;checkExp();}
     public void equipItem(Item item)
     {
         if (item instanceof Weapon) {
@@ -69,15 +75,40 @@ public class Character
             def += equip.getBoot().getDef();
         }
     }
-    public void checkExp()
-    {
+    public void checkExp() throws Exception {
         int e = (lvl+1)*1000+(int)Math.pow(lvl,2)*450;
         if (exp > e)
             lvlUp();
     }
     public void updateCharInBase(Statement st) throws Exception
     {
+        String names = getItemNames(inventory);
+        String enames = equip.getEquipItemsNames();
         st.executeUpdate("UPDATE characters SET lvl='"+lvl+"', exp = '"+exp+"', hp = '"+hp+"',"
-                + " attack = '"+attack+"', defense = '"+def+"' WHERE name = '"+name+"'");
+                + " attack = '"+attack+"', defense = '"+def+"', inventory = '"+names+"', equip = '"+enames+"'  WHERE name = '"+name+"'");
+    }
+
+    public String getItemNames(ArrayList<Item> lst)
+    {
+        StringBuilder sb = new StringBuilder();
+        if (lst.isEmpty())
+            return new String("");
+        else
+        {
+            for (Item i : lst)
+            {
+                sb.append(i.getName());
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+    public int getHpFromDb(Statement st) throws Exception
+    {
+        ResultSet rs = st.executeQuery("SELECT hp FROM characters WHERE name = '"+name+"'");
+        int res = 0;
+        while (rs.next())
+            res = rs.getInt("hp");
+        return res;
     }
 }

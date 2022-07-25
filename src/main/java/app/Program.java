@@ -1,10 +1,8 @@
 package app;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.sql.*;
-
 import classes.*;
 import classes.Character;
 import com.zaxxer.hikari.HikariConfig;
@@ -75,19 +73,17 @@ public class Program {
         while(rs.next()) { id = rs.getInt(1);}
         return id;
     }
-    public static Connection connectToDb() throws SQLException, ClassNotFoundException {
-        Connection conn = null;
+    public static Connection connectToDb() throws SQLException {
         HikariConfig cfg = new HikariConfig();
         cfg.setJdbcUrl("jdbc:postgresql://localhost:5432/postgres");
         cfg.setUsername("postgres");cfg.setPassword("123");
         HikariDataSource ds = new HikariDataSource(cfg);
-        conn = ds.getConnection();
-        return conn;
+        return ds.getConnection();
     }
 
     public static int checkLogin(@NotNull Statement st, String log, String pass) throws SQLException {
-        ArrayList<String> l = new ArrayList<String>();
-        ArrayList<String> p = new ArrayList<String>();
+        ArrayList<String> l = new ArrayList<>();
+        ArrayList<String> p = new ArrayList<>();
         ResultSet rs = st.executeQuery("SELECT name FROM users");
         while (rs.next())
             l.add(rs.getString("name"));
@@ -148,8 +144,8 @@ public class Program {
     }
 
     public static @NotNull ArrayList<String> getCharsName(String log, @NotNull Statement st) throws SQLException {
-        String ids = ""; ArrayList<String> lst = new ArrayList<String>();
-        ArrayList<String> res = new ArrayList<String>();
+        String ids = ""; ArrayList<String> lst;
+        ArrayList<String> res = new ArrayList<>();
         ResultSet rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");
         while (rs.next())
             ids = rs.getString("charsid");
@@ -162,21 +158,20 @@ public class Program {
         }
         return res;
     }
-
     public static void createChar(String log, Statement st, Scanner sc) throws SQLException {
 
             System.out.print("Write character name: ");
             String name = checkCharName(st,sc);
             System.out.print("Choose character class (mage or warrior): ");
             String cls = checkCharClass(sc);
-            ArrayList<Integer> ids = new ArrayList<Integer>();int id = 0;
+            ArrayList<Integer> ids = new ArrayList<>();int id = 0;
             ResultSet rs = st.executeQuery("SELECT id FROM characters");
             while (rs.next())
                 ids.add(rs.getInt("id"));
             if (ids.size() > 0)
                 id = ids.get(ids.size()-1) + 1;
             st.executeUpdate("INSERT INTO characters(id,name,class,lvl,exp,attack,defense,hp,equip,inventory) " +
-                    "VALUES("+id+",'"+name+"','"+cls+"',"+1+","+1000+","+5+","+3+","+100+",'','','');");
+                    "VALUES("+id+",'"+name+"','"+cls+"',"+1+","+1000+","+5+","+3+","+100+",'','');");
             rs = st.executeQuery("SELECT charsid FROM users WHERE name = '"+log+"'");String i = "";
             while (rs.next())
                 i = rs.getString("charsid");
@@ -239,42 +234,30 @@ public class Program {
         while (true)
         {
             if (lst.get(0).getX() <= 0 || lst.get(0).getX() >= size -1
-                    || lst.get(0).getY() <= 0 || lst.get(0).getY() >= size /2 -1)
+                    || lst.get(0).getY() <= 0 || lst.get(0).getY() >= size /2 -1
+                    || ch.getHp() <= 0 || in == 'q')
             {
                 System.out.println("You are lose!");
                 break;
             }
-            System.out.println("w - up, s - down, d - right, a - left, e - hit, q - exit");
+            System.out.println("w - up, s - down, d - right, a - left,i - inventory, e - hit, q - exit");
             System.out.println("Your heals points: " + ch.getHp());
             for (Enemy e : lst2)
                 System.out.println("Enemy heals point: " + e.hp);
-            printMap(lst,ch.getLvl());
-            in = sc.next().charAt(0);
-            if (in == 'w')
-                lst.get(0).setY(lst.get(0).getY() -1);
-            if (in == 's')
-                lst.get(0).setY(lst.get(0).getY() +1);
-            if (in == 'd')
-                lst.get(0).setX(lst.get(0).getX() +1);
-            if (in == 'e')
-            {
-                for (int i = 1;i<lst.size();i++)
-                {
-                    if (!Utils.moreOn(lst.get(0).getX(),lst.get(i).getX(),2)
-                    && !Utils.moreOn(lst.get(0).getY(),lst.get(i).getY(),2))
-                        lst2.get(i-1).setEnemy(makeDamage(lst2.get(i-1),ch));
-                }
+            printMap(lst,ch.getLvl());in = sc.next().charAt(0);lst = charMove(lst,in);
+            if (in == 'i') {
+                ch = openInventory(ch);
+                in = sc.next().charAt(0);
+                lst = charMove(lst,in);
+            }
+            if (in == 'e') {
+                lst2 = makeDamageToAll(lst,lst2,ch);
                 ArrayList<Integer> del = checkEnemysHp(lst2);
-                for (Integer i : del)
-                {
+                for (Integer i : del) {
                     lst2.remove(lst2.get(i));
                     lst.remove(i + 1);
+                    ch = getDrop(st, ch);
                 }
-            }
-            if (in == 'a')
-                lst.get(0).setX(lst.get(0).getX() -1);
-            if (in == 'q') {
-                break;
             }
             if (lst2.isEmpty())
             {
@@ -284,20 +267,90 @@ public class Program {
                 launchGame(ch,st,sc);
                 break;
             }
-            for (int i = 0;i< lst2.size();i++) {
-                if (!Utils.moreOn(lst.get(0).getX(),lst.get(i + 1).getX(),2)
-                    && !Utils.moreOn(lst.get(0).getY(),lst.get(i + 1).getY(),2))
-                    ch = lst2.get(i).giveDamage(ch);
-            }
-            if (ch.getHp() <= 0)
-            {
-                System.out.println("You are lose!");
-                break;
-            }
+            ch = getDamage(lst,lst2,ch);
             lst = enemyMove(lst);
         }
     }
 
+    public static Character openInventory(Character ch)
+    {
+        System.out.println("Your items: " + ch.getItemNames(ch.inventory));
+        System.out.println("Your equip items: "+ ch.getEquip().getEquipItemsNames());
+        System.out.println("If you want equip item write his name.");
+        Scanner sc = new Scanner(System.in);
+        String in = sc.nextLine();
+        for (Item i : ch.inventory)
+        {
+            if (i.getName().equals(in)) {
+                ch.equipItem(i);
+            }
+        }
+        return ch;
+    }
+    public static ArrayList<Enemy> makeDamageToAll(ArrayList<Position> lst, ArrayList<Enemy> lst2, Character ch)
+    {
+        for (int i = 1; i < lst.size(); i++) {
+            if (!Utils.moreOn(lst.get(0).getX(), lst.get(i).getX(), 2)
+                    && !Utils.moreOn(lst.get(0).getY(), lst.get(i).getY(), 2))
+                lst2.get(i - 1).setEnemy(makeDamage(lst2.get(i - 1), ch));
+        }
+        return lst2;
+    }
+    public static Character getDamage(ArrayList<Position> lst, ArrayList<Enemy> lst2, Character ch)
+    {
+        for (int i = 0;i< lst2.size();i++) {
+            if (!Utils.moreOn(lst.get(0).getX(), lst.get(i + 1).getX(), 2)
+                    && !Utils.moreOn(lst.get(0).getY(), lst.get(i + 1).getY(), 2))
+                ch = lst2.get(i).giveDamage(ch);
+        }
+        return ch;
+    }
+    public static ArrayList<Position> charMove(ArrayList<Position> lst, char in)
+    {
+        if (in == 'w')
+            lst.get(0).setY(lst.get(0).getY() -1);
+        if (in == 's')
+            lst.get(0).setY(lst.get(0).getY() +1);
+        if (in == 'd')
+            lst.get(0).setX(lst.get(0).getX() +1);
+        if (in == 'a')
+            lst.get(0).setX(lst.get(0).getX() -1);
+        return lst;
+    }
+    public static Character getDrop(@NotNull Statement st,@NotNull Character ch) throws SQLException {
+        ArrayList<Item> items = new ArrayList<>();
+        ResultSet rs = st.executeQuery("SELECT * FROM items");
+        while (rs.next())
+        {
+            String type = rs.getString("type");
+            Item it = getType(type);
+            if (it != null) {
+                it.setName(rs.getString("name"));
+                it.setAttack(rs.getInt("attack"));
+                it.setDef(rs.getInt("defense"));
+                items.add(it);
+            }
+        }
+        int random = (int)(Math.random() * (items.size() -1));
+        System.out.println("You are get: " + items.get(random).getName());
+        ch.inventory.add(items.get(random));
+        return ch;
+    }
+
+    public static @Nullable Item getType(@NotNull String type)
+    {
+        if (type.equals("armor"))
+            return new Armor();
+        if (type.equals("boot"))
+            return new Boot();
+        if (type.equals("glove"))
+            return new Glove();
+        if (type.equals("helmet"))
+            return new Helmet();
+        if (type.equals("weapon"))
+            return new Weapon();
+        return null;
+    }
     public static Enemy makeDamage(Enemy obj, Character ch)
     {
         int rand = 1 + (int)(Math.random() * 3);int crit = 1;

@@ -2,12 +2,16 @@ package classes;
 
 public class Weapon implements Item
 {
-    private static String name;
-    private static int damage;
+    private String name = "No name";
+    private int damage;
+
+    private int defense;
+    public Weapon() {}
     public Weapon(String Name, int d) {name = Name;damage=d;}
-    public static String getName() {return name;}
-    public static int getDamage() {return damage;}
-    public static void setName(String n) {name = n;}
-    public static void setDamage(int d) {damage = d;}
+    public String getName() {return name;}
+    public int getDamage() {return damage;}
+    public void setName(String n) {name = n;}
+    public void setAttack(int d) {damage = d;}
+    public void setDef(int d) {defense = d;}
 
 }
