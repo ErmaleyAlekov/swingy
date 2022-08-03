@@ -13,6 +13,7 @@ public class User
     private String name;
     private String pass;
     private ArrayList<Character> chars = new ArrayList<>();
+    public User() {}
     public User(String Name,String Pass) {name = Name;pass = Pass;}
     public User(@NotNull User obj) {name = obj.name;pass = obj.pass;chars = obj.chars;}
     public String getName() {return name;}

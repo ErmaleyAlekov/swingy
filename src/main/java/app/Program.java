@@ -9,7 +9,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.*;
 public class Program {
-    static User u = null;
+    static User u = new User();
     public static void console() throws Exception {
         Scanner sc = new Scanner(System.in);
         String in = "";
