@@ -8,6 +8,10 @@ import classes.Character;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
 public class Program {
     static User u = new User();
     public static void console() throws Exception {
@@ -41,6 +45,17 @@ public class Program {
     }
 
     public static void gui() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JFrame frame = new Frames();
+                frame.getContentPane().setBackground(Color.BLACK);
+                frame.setTitle("Logged In");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setLocationRelativeTo(null);
+                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            }
+        });
     }
 
     public static void createAccount(Statement st) throws Exception {
