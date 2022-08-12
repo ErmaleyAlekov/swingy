@@ -14,6 +14,7 @@ import java.awt.event.*;
 
 public class Program {
     static User u = new User();
+    static Controler c = new Controler();
     public static void console() throws Exception {
         Scanner sc = new Scanner(System.in);
         String in = "";
@@ -31,6 +32,7 @@ public class Program {
                 if (checkLogin(st, login, pass) == 0) {
                     u = new User(login,pass);
                     System.out.println("You are login in!");
+                    c.inState();
                     startConsoleGame(login, st);
                     break;
                 }
@@ -150,6 +152,7 @@ public class Program {
             if (chars.contains(in)) {
                 for (Character ch : u.getChars()) {
                     if (ch.getName().equals(in)) {
+                        c.inState();
                         launchGame(ch, st, sc);
                         break;
                     }
@@ -253,6 +256,7 @@ public class Program {
                     || ch.getHp() <= 0 || in == 'q')
             {
                 System.out.println("You are lose!");
+                c.deState();
                 break;
             }
             System.out.println("w - up, s - down, d - right, a - left,i - inventory, e - hit, q - exit");

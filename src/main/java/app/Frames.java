@@ -19,8 +19,9 @@ public class Frames extends JFrame {
         private final JLabel passLbl = new JLabel("PASSWORD:");
         private final JTextField logTf = new JTextField(15);
         private final JPasswordField passPf = new JPasswordField();
+        private final JButton buttonCreate = new JButton("Create");
         private final JButton buttonOk = new JButton("Ok");
-        private final JButton buttonCancel = new JButton("Cancel");
+        private final JButton buttonCancel = new JButton("Console");
         private final JLabel statusLbl = new JLabel(" ");
         public Auth(){
             this(null, true);
@@ -31,7 +32,7 @@ public class Frames extends JFrame {
             JPanel p3 = new JPanel(new GridLayout(2, 1));p3.add(logLbl);p3.add(passLbl);
             JPanel p4 = new JPanel(new GridLayout(2, 1));p4.add(logTf);p4.add(passPf);
             JPanel p1 = new JPanel();p1.add(p3);p1.add(p4);
-            JPanel p2 = new JPanel();p2.add(buttonOk);p2.add(buttonCancel);
+            JPanel p2 = new JPanel();p2.add(buttonCreate);p2.add(buttonOk);p2.add(buttonCancel);
             JPanel p5 = new JPanel(new BorderLayout());p5.add(p2, BorderLayout.CENTER);p5.add(statusLbl, BorderLayout.NORTH);
             statusLbl.setForeground(Color.RED);statusLbl.setHorizontalAlignment(SwingConstants.CENTER);
             setLayout(new BorderLayout());add(p1, BorderLayout.CENTER);add(p5, BorderLayout.SOUTH);
@@ -66,7 +67,35 @@ public class Frames extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     setVisible(false);
                     parent.dispose();
-                    System.exit(0);
+                    try {
+                        Program.console();
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }            
+                }
+            });
+            buttonCreate.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Connection con;Statement st;
+                    try {
+                        con = Program.connectToDb();st = con.createStatement();
+                        if (Program.checkLogin(st,logTf.getText(), String.valueOf(passPf.getPassword())) != 1)
+                            statusLbl.setText("Account with this name exist! Try again");
+                        else
+                        {
+                            int Id = Program.getLastId(st) + 1;
+                            st.executeUpdate("INSERT INTO users(id,name,password,charsID) VALUES ("+Id+",'"
+                                    +logTf.getText()+"','"+String.valueOf(passPf.getPassword())+"',"+"''"+");");
+                            statusLbl.setText("Account created! Start game");
+                            setVisible(false);parent.dispose();
+                            Program.startConsoleGame(logTf.getText(), st);
+                            st.close();
+                        }
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                        System.exit(-1);
+                    }
                 }
             });
         }
