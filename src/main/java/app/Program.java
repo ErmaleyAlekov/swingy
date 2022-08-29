@@ -13,34 +13,51 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class Program {
-    static User u = new User();
-    static Controler c = new Controler();
+    // static User u = new User();
+    static Controler c = Singleton.getInstance();
     public static void console() throws Exception {
         Scanner sc = new Scanner(System.in);
+        System.out.println("Hello! Have you got account? (yes/no/changeMode)");
         String in = "";
-        System.out.println("Hello! Have you got account? (yes/no)");
         in = sc.nextLine();
         Connection con = connectToDb();
         Statement st = con.createStatement();
         if (in.equals("yes")) {
             while (true)
             {
+                System.out.println("If you want change mode write: CHANGE");
                 System.out.print("LOGIN: ");
                 String login = sc.nextLine();
+                if (login.equals("CHANGE"))
+                {
+                    c.changeMode();break;
+                }
                 System.out.print("PASS: ");
                 String pass = sc.nextLine();
+                if (pass.equals("CHANGE"))
+                {
+                    c.changeMode();break;
+                }
                 if (checkLogin(st, login, pass) == 0) {
-                    u = new User(login,pass);
+                    c.setUser(new User(login,pass));
                     System.out.println("You are login in!");
-                    c.inState();
                     startConsoleGame(login, st);
-                    break;
+                    c.setState(0);
+                    continue;
                 }
                 else
                     System.out.println("Wrong data!");
             }
-        } else if (in.equals("no"))
+        } 
+        else if (in.equals("no"))
+        {
             createAccount(st);
+        }
+        else if (in.equals("changeMode"))
+        {
+            sc.close();
+            c.changeMode();
+        }
         else
             console();
         sc.close();
@@ -118,9 +135,9 @@ public class Program {
     {
         try {
             if (args[0].equals("console")) {
-                console();
+                c.setMode("console");console();
             } else if (args[0].equals("gui")) {
-                gui();
+                c.setMode("gui");gui();
             } else
                 throw new IllegalArgumentException();
         } catch (Exception e) {
@@ -131,13 +148,14 @@ public class Program {
     public static void startConsoleGame(String log, Statement st) throws Exception {
         while (true)
         {
+            c.setState(1);
             System.out.println("Hi, "+log+"!");
             System.out.println("Welcome to the game!");
             System.out.print("List of your characters: ");
             ArrayList<String> chars = getCharsName(log,st);
-            u.getChars(chars,st);
+            c.getUser().getChars(chars,st);
             for (String s : chars)
-                System.out.print(s+"("+u.getCharLvl(s)+" lvl)"+",");
+                System.out.print(s+"("+c.getUser().getCharLvl(s)+" lvl)"+",");
             System.out.println();
             System.out.println("Choose exist character or create new. (create/name of char/delete)");
             System.out.println("For quit write EXIT");
@@ -150,9 +168,8 @@ public class Program {
             if (in.equals("EXIT"))
                 break;
             if (chars.contains(in)) {
-                for (Character ch : u.getChars()) {
+                for (Character ch : c.getUser().getChars()) {
                     if (ch.getName().equals(in)) {
-                        c.inState();
                         launchGame(ch, st, sc);
                         break;
                     }

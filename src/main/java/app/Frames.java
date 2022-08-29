@@ -4,24 +4,30 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
 
+import classes.*;
 import javax.swing.*;
 
 public class Frames extends JFrame {
     private Auth w;
+    private Controler c = Singleton.getInstance();
     public Frames() {
-        w = new Auth(this, true);
-        w.setVisible(true);
+        if (c.getState() == 0)
+        {
+            w = new Auth(this, true);
+            w.setVisible(true);
+        }  
     }
-    class Auth extends JDialog {
-        
+    class Auth extends JDialog 
+    {   
         private final JLabel logLbl = new JLabel("LOGIN:");
         private final JLabel passLbl = new JLabel("PASSWORD:");
         private final JTextField logTf = new JTextField(15);
         private final JPasswordField passPf = new JPasswordField();
         private final JButton buttonCreate = new JButton("Create");
         private final JButton buttonOk = new JButton("Ok");
-        private final JButton buttonCancel = new JButton("Console");
+        private final JButton buttonCancel = new JButton("Cancel");
         private final JLabel statusLbl = new JLabel(" ");
         public Auth(){
             this(null, true);
@@ -51,6 +57,7 @@ public class Frames extends JFrame {
                         con = Program.connectToDb();st = con.createStatement();
                         if (Program.checkLogin(st, logTf.getText(), String.valueOf(passPf.getPassword())) == 0)
                         {
+                            c.setUser(new User(logTf.getText(),String.valueOf(passPf.getPassword())));
                             parent.setVisible(true);
                             setVisible(false);
                         }
@@ -67,11 +74,11 @@ public class Frames extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     setVisible(false);
                     parent.dispose();
-                    try {
-                        Program.console();
-                    } catch (Exception ex) {
-                        System.out.println(ex.getMessage());
-                    }            
+                    // try {
+                    //     Program.console();
+                    // } catch (Exception ex) {
+                    //     ex.printStackTrace();
+                    // }            
                 }
             });
             buttonCreate.addActionListener(new ActionListener() {
@@ -98,6 +105,46 @@ public class Frames extends JFrame {
                     }
                 }
             });
+        }
+    }
+    class ChooseCharacter extends JDialog
+    {
+        private final JButton buttonCreate = new JButton("Create Character");
+        private final JButton buttonCancel = new JButton("Cancel");
+        private JPanel p = new JPanel();
+        private ArrayList<String> chars;
+        private ChooseCharacter(){
+            this(null, true, "");
+        }
+        public ChooseCharacter(final JFrame parent, boolean modal, String login)
+        {
+            super(parent, modal);
+            addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    System.exit(0);
+                }
+            });
+            buttonCancel.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    setVisible(false);
+                    parent.dispose();
+                }
+            });
+            try {
+                Connection con = Program.connectToDb();
+                Statement st = con.createStatement();
+                chars = Program.getCharsName(login, st);
+                if (chars.size() > 0)
+                    for (String i:chars)
+                        p.add(new JButton(i));
+                p.add(buttonCreate);p.add(buttonCancel);
+                setLayout(new BorderLayout());add(p, BorderLayout.CENTER);
+                pack();setLocationRelativeTo(null);setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
