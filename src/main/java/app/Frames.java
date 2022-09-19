@@ -17,6 +17,11 @@ public class Frames extends JFrame {
         {
             w = new Auth(this, true);
             w.setVisible(true);
+            w.setUndecorated(true);
+        }
+        if (c.getState() == 1)
+        {
+            
         }  
     }
     class Auth extends JDialog 
@@ -58,8 +63,10 @@ public class Frames extends JFrame {
                         if (Program.checkLogin(st, logTf.getText(), String.valueOf(passPf.getPassword())) == 0)
                         {
                             c.setUser(new User(logTf.getText(),String.valueOf(passPf.getPassword())));
-                            parent.setVisible(true);
+                            ChooseCharacter cc = new ChooseCharacter(parent, true, logTf.getText());
                             setVisible(false);
+                            cc.setUndecorated(true);
+                            cc.setVisible(true);
                         }
                         else
                              statusLbl.setText("Invalid login or password!");
@@ -137,8 +144,20 @@ public class Frames extends JFrame {
                 Statement st = con.createStatement();
                 chars = Program.getCharsName(login, st);
                 if (chars.size() > 0)
+                {
                     for (String i:chars)
-                        p.add(new JButton(i));
+                    {
+                        JButton btn = new JButton(i);
+                        btn.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                setVisible(false);
+                                parent.dispose();
+                            }
+                        });
+                        p.add(btn);
+                    }
+                }
                 p.add(buttonCreate);p.add(buttonCancel);
                 setLayout(new BorderLayout());add(p, BorderLayout.CENTER);
                 pack();setLocationRelativeTo(null);setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -146,5 +165,9 @@ public class Frames extends JFrame {
                 e.printStackTrace();
             }
         }
+    }
+    class startGame extends JDialog
+    {
+
     }
 }

@@ -17,6 +17,7 @@ public class Controler {
     public void deState() {state--;}
     public User getUser() {return u;}
     public void setUser(User obj) {u = obj;}
+    public void nextState() {}
     public void changeMode() {
         if (currentMode.equals("gui"))
         {
